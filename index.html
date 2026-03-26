@@ -37,6 +37,8 @@
         <span class="logo-pixel">pixel</span><span class="logo-pick">pick</span>
       </h1>
       <p class="tagline">How sharp is your colour vision?</p>
+      <div id="filter-rows"></div>
+      <p class="combo-preview" id="combo-preview"></p>
       <button id="play-btn" class="btn-play">Play</button>
     </div>
   </div>
@@ -63,15 +65,18 @@
   <!-- Result Screen -->
   <div id="result-screen" class="screen hidden">
     <div id="result-card">
+      <div id="result-combo-pill" class="result-combo-pill"></div>
       <div id="result-emoji">🎨</div>
       <div id="result-title">Colour Spotter</div>
       <div id="result-desc">Solid perception skills.</div>
       <div id="result-score">0</div>
-      <div class="result-label">score</div>
+      <div class="result-label" id="result-label">score</div>
       <div class="result-divider"></div>
       <div id="result-rounds">0 rounds survived</div>
       <div id="result-hardest">Trickiest colour: —</div>
       <div id="result-percentile">Better than 3% of players</div>
+      <div id="result-elapsed">Time taken: —</div>
+      <div id="result-wrong-picks">✗ Wrong picks: 0</div>
       <div class="result-buttons">
         <button id="share-btn" class="btn-share">Share</button>
         <button id="play-again-btn" class="btn-play-again">Play Again</button>
