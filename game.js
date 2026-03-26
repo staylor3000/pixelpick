@@ -661,6 +661,14 @@ shareBtn.addEventListener('click', () => {
 
 playBtn.addEventListener('click', initGame);
 
+document.getElementById('home-btn').addEventListener('click', () => {
+  clearInterval(state.timerInterval);
+  state.active = false;
+  timerPill.style.display = ''; // reset for next game
+  showScreen('start');
+  startLogoCycle();
+});
+
 playAgainBtn.addEventListener('click', () => {
   showScreen('start');
   startLogoCycle();

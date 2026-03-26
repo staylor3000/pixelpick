@@ -241,6 +241,32 @@ button {
   cursor: crosshair;
 }
 
+/* Home / menu button */
+.home-btn {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255,255,255,0.85);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 20;
+  min-height: 36px;
+  white-space: nowrap;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.home-btn:hover  { background: rgba(255,255,255,0.32); }
+.home-btn:active { transform: translateX(-50%) scale(0.95); }
+
 /* Wrong click — red border flash */
 #game-canvas.wrong-flash::after {
   content: '';
@@ -413,7 +439,7 @@ button {
 .filter-rows {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   max-width: 380px;
 }
@@ -456,8 +482,8 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  padding: 8px 4px;
-  min-height: 56px;
+  padding: 6px 4px;
+  min-height: 48px;
   color: #9A90AA;
 }
 
