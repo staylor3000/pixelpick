@@ -115,8 +115,8 @@ button {
   user-select: none;
 }
 
-.logo-pixel { color: #A070DD; }
-.logo-pick  { color: #48C99A; }
+.logo-pixel { color: #A070DD; transition: color 0.6s ease; }
+.logo-pick  { color: #48C99A; transition: color 0.6s ease; }
 
 .tagline {
   font-weight: 600;
