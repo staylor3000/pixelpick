@@ -15,6 +15,17 @@ const ROUND_COLOURS = [
   { name: 'Lilac',    hsl: [285, 50, 77] },
 ];
 
+const LOGO_CYCLES = [
+  { pixel: 'hsl(340, 80%, 74%)', pick: 'hsl(340, 80%, 86%)' },
+  { pixel: 'hsl(155, 55%, 62%)', pick: 'hsl(155, 55%, 74%)' },
+  { pixel: 'hsl(205, 75%, 70%)', pick: 'hsl(205, 75%, 82%)' },
+  { pixel: 'hsl(270, 60%, 72%)', pick: 'hsl(270, 60%, 84%)' },
+  { pixel: 'hsl(28,  90%, 71%)', pick: 'hsl(28,  90%, 83%)' },
+  { pixel: 'hsl(120, 30%, 65%)', pick: 'hsl(120, 30%, 77%)' },
+  { pixel: 'hsl(48,  80%, 61%)', pick: 'hsl(48,  80%, 73%)' },
+  { pixel: 'hsl(285, 50%, 72%)', pick: 'hsl(285, 50%, 84%)' },
+];
+
 const RANKS = [
   { min: 0,  emoji: '🐛', title: 'Colour Newbie',    desc: 'Everyone starts somewhere!' },
   { min: 2,  emoji: '🦋', title: 'Getting There',    desc: 'Your eyes are warming up.' },
@@ -32,6 +43,9 @@ const startScreen  = document.getElementById('start-screen');
 const gameScreen   = document.getElementById('game-screen');
 const resultScreen = document.getElementById('result-screen');
 
+const logoPixel = document.querySelector('.logo-pixel');
+const logoPick  = document.querySelector('.logo-pick');
+
 const playBtn      = document.getElementById('play-btn');
 const playAgainBtn = document.getElementById('play-again-btn');
 const shareBtn     = document.getElementById('share-btn');
@@ -48,6 +62,8 @@ const livesDisplay  = document.getElementById('lives-display');
 // =============================================
 
 let state = {};
+let logoCycleInterval = null;
+let logoCycleIdx = 0;
 
 function resetState() {
   state = {
@@ -98,6 +114,30 @@ function getRank(rounds) {
 }
 
 // =============================================
+// Logo colour cycle
+// =============================================
+
+function startLogoCycle() {
+  stopLogoCycle();
+  logoCycleIdx = 0;
+
+  // Set first colour immediately so there's no flash from CSS defaults
+  logoPixel.style.color = LOGO_CYCLES[0].pixel;
+  logoPick.style.color  = LOGO_CYCLES[0].pick;
+
+  logoCycleInterval = setInterval(() => {
+    logoCycleIdx = (logoCycleIdx + 1) % LOGO_CYCLES.length;
+    logoPixel.style.color = LOGO_CYCLES[logoCycleIdx].pixel;
+    logoPick.style.color  = LOGO_CYCLES[logoCycleIdx].pick;
+  }, 2000);
+}
+
+function stopLogoCycle() {
+  clearInterval(logoCycleInterval);
+  logoCycleInterval = null;
+}
+
+// =============================================
 // Screen management
 // =============================================
 
@@ -112,6 +152,7 @@ function showScreen(name) {
 // =============================================
 
 function initGame() {
+  stopLogoCycle();
   resetState();
   showScreen('game');
 
@@ -337,7 +378,7 @@ shareBtn.addEventListener('click', () => {
   const score  = shareBtn.dataset.score;
   const rounds = shareBtn.dataset.rounds;
   const rank   = shareBtn.dataset.rank;
-  const text   = `I scored ${score} on PixelPick and survived ${rounds} rounds! 🎨\nCan you beat my ${rank} score?\npixelpick.net`;
+  const text   = `I scored ${score} on pixelpick and survived ${rounds} rounds! 🎨\nCan you beat my ${rank} score?\npixelpick.net`;
 
   if (navigator.share) {
     navigator.share({ text }).catch(() => {});
@@ -363,6 +404,7 @@ playBtn.addEventListener('click', initGame);
 
 playAgainBtn.addEventListener('click', () => {
   showScreen('start');
+  startLogoCycle();
 });
 
 gameCanvas.addEventListener('click', (e) => {
@@ -374,6 +416,9 @@ gameCanvas.addEventListener('touchstart', (e) => {
   const t = e.touches[0];
   handleInput(t.clientX, t.clientY);
 }, { passive: false });
+
+// Start logo cycle immediately on page load
+startLogoCycle();
 
 // =============================================
 // Floating pixels on start screen
