@@ -65,7 +65,8 @@ button {
 #start-screen {
   background: var(--cream);
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  align-items: center;
 }
 
 .floating-pixels {
@@ -101,10 +102,11 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   z-index: 1;
-  padding: 24px;
+  padding: 20px 24px;
   text-align: center;
+  width: 100%;
 }
 
 .logo {
@@ -238,6 +240,32 @@ button {
   border-radius: 4px;
   cursor: crosshair;
 }
+
+/* Home / menu button */
+.home-btn {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255,255,255,0.85);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 20;
+  min-height: 36px;
+  white-space: nowrap;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.home-btn:hover  { background: rgba(255,255,255,0.32); }
+.home-btn:active { transform: translateX(-50%) scale(0.95); }
 
 /* Wrong click — red border flash */
 #game-canvas.wrong-flash::after {
@@ -403,6 +431,142 @@ button {
 
 .btn-play-again:hover  { border-color: var(--ink-mid); color: var(--ink); transform: scale(1.03); }
 .btn-play-again:active { transform: scale(0.97); }
+
+/* =============================================
+   Start screen — filter rows
+   ============================================= */
+
+.filter-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.filter-row {
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  padding: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.filter-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #9A90AA;
+  padding: 0 10px;
+  min-width: 64px;
+  white-space: nowrap;
+}
+
+.filter-options {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.filter-btn {
+  border-radius: 12px;
+  flex: 1;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: all .15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 4px;
+  min-height: 48px;
+  color: #9A90AA;
+}
+
+.filter-btn:active { transform: scale(0.95); }
+
+.filter-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.filter-name {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.filter-desc {
+  font-size: 10px;
+  font-weight: 600;
+  color: inherit;
+  opacity: 0.75;
+}
+
+.filter-divider {
+  width: 1px;
+  background: rgba(0,0,0,0.08);
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.filter-coming-soon {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.coming-soon-pill {
+  font-size: 9px;
+  font-weight: 700;
+  background: #FFF3C0;
+  color: #B8880A;
+  border-radius: 6px;
+  padding: 2px 5px;
+}
+
+.combo-preview {
+  font-size: 12px;
+  font-weight: 700;
+  color: #9A90AA;
+  text-align: center;
+  min-height: 1.2em;
+}
+
+/* Floating pixels greyscale mode */
+.floating-pixel {
+  transition: filter 0.3s ease;
+}
+
+.floating-pixels.greyscale .floating-pixel {
+  filter: grayscale(1);
+}
+
+/* =============================================
+   Result screen additions
+   ============================================= */
+
+.result-combo-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9A90AA;
+  background: #F5F0FF;
+  border-radius: 20px;
+  padding: 4px 12px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+}
+
+#result-elapsed,
+#result-wrong-picks {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
 
 /* =============================================
    Mobile tweaks
