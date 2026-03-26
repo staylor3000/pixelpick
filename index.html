@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PixelPick — Colour Perception Test &amp; Game</title>
+  <meta name="description" content="Test your colour vision with PixelPick — find the hidden shade in each round. Free online colour perception game. How sharp are your eyes?">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://pixelpick.net">
+  <meta property="og:title" content="PixelPick — Colour Perception Test &amp; Game">
+  <meta property="og:description" content="Can you spot the slightly different shade? Test your colour vision in this free online game.">
+  <meta property="og:url" content="https://pixelpick.net">
+  <meta property="og:type" content="website">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "PixelPick",
+    "description": "A colour perception game where you find the subtly different shade",
+    "url": "https://pixelpick.net",
+    "genre": "Puzzle",
+    "playMode": "SinglePlayer",
+    "applicationCategory": "Game"
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Start Screen -->
+  <div id="start-screen" class="screen">
+    <div class="floating-pixels" id="floating-pixels"></div>
+    <div class="start-content">
+      <h1 class="logo">
+        <span class="logo-pixel">Pixel</span><span class="logo-pick">Pick</span>
+      </h1>
+      <p class="tagline">How sharp is your colour vision?</p>
+      <button id="play-btn" class="btn-play">Play</button>
+    </div>
+  </div>
+
+  <!-- Gameplay Screen -->
+  <div id="game-screen" class="screen hidden">
+    <div id="game-canvas">
+      <div class="hud-gradient"></div>
+      <div class="hud">
+        <div class="hud-score" id="score-display">0</div>
+        <div class="timer-pill" id="timer-pill">
+          <span class="hud-timer" id="timer-display">60</span>
+        </div>
+        <div class="hud-lives" id="lives-display">
+          <span class="heart heart-full">♥</span>
+          <span class="heart heart-full">♥</span>
+          <span class="heart heart-full">♥</span>
+        </div>
+      </div>
+      <div id="target-patch"></div>
+    </div>
+  </div>
+
+  <!-- Result Screen -->
+  <div id="result-screen" class="screen hidden">
+    <div id="result-card">
+      <div id="result-emoji">🎨</div>
+      <div id="result-title">Colour Spotter</div>
+      <div id="result-desc">Solid perception skills.</div>
+      <div id="result-score">0</div>
+      <div class="result-label">score</div>
+      <div class="result-divider"></div>
+      <div id="result-rounds">0 rounds survived</div>
+      <div id="result-hardest">Trickiest colour: —</div>
+      <div id="result-percentile">Better than 3% of players</div>
+      <div class="result-buttons">
+        <button id="share-btn" class="btn-share">Share</button>
+        <button id="play-again-btn" class="btn-play-again">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
