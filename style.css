@@ -436,10 +436,10 @@ button {
    Start screen — filter rows
    ============================================= */
 
-.filter-rows {
+#filter-rows {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
   width: 100%;
   max-width: 380px;
 }
