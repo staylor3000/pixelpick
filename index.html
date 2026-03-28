@@ -26,7 +26,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 
@@ -84,6 +84,24 @@
       <div id="result-elapsed">Time taken: —</div>
       <div id="result-wrong-picks">✗ Wrong picks: 0</div>
       <div id="result-device">Played on desktop</div>
+      <div class="result-divider"></div>
+      <div id="leaderboard-section">
+        <div class="lb-header">Today's leaderboard</div>
+        <div id="lb-initials-row">
+          <input
+            id="lb-name-input"
+            type="text"
+            maxlength="3"
+            placeholder="AAA"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          />
+          <button id="lb-submit-btn">Submit</button>
+          <button id="lb-skip-btn" class="lb-skip-btn">Skip</button>
+        </div>
+        <div id="lb-list"></div>
+      </div>
       <div class="result-buttons">
         <button id="share-btn" class="btn-share">Share</button>
         <button id="play-again-btn" class="btn-play-again">Play Again</button>

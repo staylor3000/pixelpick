@@ -103,6 +103,9 @@ const RANDOM_POOLS = {
   shape: ['square', 'circle', 'diamond', 'random'],
 };
 
+// Leaderboard worker endpoint
+const WORKER_URL = 'https://pixelpick.net/api/scores';
+
 // Custom SVG cursor for gameplay
 const CURSOR_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><circle cx='16' cy='16' r='6' fill='none' stroke='white' stroke-width='2' opacity='0.9'/><line x1='16' y1='4' x2='16' y2='11' stroke='white' stroke-width='2' stroke-linecap='round' opacity='0.9'/><line x1='16' y1='21' x2='16' y2='28' stroke='white' stroke-width='2' stroke-linecap='round' opacity='0.9'/><line x1='4' y1='16' x2='11' y2='16' stroke='white' stroke-width='2' stroke-linecap='round' opacity='0.9'/><line x1='21' y1='16' x2='28' y2='16' stroke='white' stroke-width='2' stroke-linecap='round' opacity='0.9'/></svg>`;
 const GAME_CURSOR = `url("data:image/svg+xml,${encodeURIComponent(CURSOR_SVG)}") 16 16, crosshair`;
@@ -154,6 +157,7 @@ let state = {};
 let logoCycleInterval = null;
 let logoCycleIdx = 0;
 let currentLiveColour = '#2A2438';
+let playerRank = null;
 
 function getColourPalette(tone) {
   return tone === 'grey' ? GREYSCALE_COLOURS : ROUND_COLOURS;
@@ -772,6 +776,116 @@ function showRoundLabel(round) {
 }
 
 // =============================================
+// Leaderboard
+// =============================================
+
+async function submitScore(name, score, rounds, combo, tone) {
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, score, rounds, combo, tone }),
+    });
+    return await res.json();
+  } catch (e) {
+    console.warn('Leaderboard unavailable', e);
+    return null;
+  }
+}
+
+async function fetchScores() {
+  try {
+    const res = await fetch(WORKER_URL);
+    return await res.json();
+  } catch (e) {
+    console.warn('Leaderboard unavailable', e);
+    return [];
+  }
+}
+
+function renderLeaderboard(scores, highlightTs) {
+  const list = document.getElementById('lb-list');
+  list.innerHTML = '';
+
+  const medals = ['', '#C9A227', '#9A9A9A', '#CD7F32'];
+
+  scores.slice(0, 10).forEach((entry, i) => {
+    const isMe = highlightTs != null && entry.ts === highlightTs;
+    const row = document.createElement('div');
+    row.className = 'lb-row' + (isMe ? ' lb-row-me' : '');
+    row.innerHTML = `
+      <span class="lb-rank">${i + 1}</span>
+      <span class="lb-name">${entry.name}</span>
+      <span class="lb-combo">${entry.combo}</span>
+      <span class="lb-score">${entry.score}</span>
+    `;
+    if (i < 3) {
+      row.querySelector('.lb-rank').style.color = medals[i + 1];
+    }
+    list.appendChild(row);
+  });
+}
+
+function initLeaderboard(rounds, comboString) {
+  const nameInput   = document.getElementById('lb-name-input');
+  const submitBtn   = document.getElementById('lb-submit-btn');
+  const skipBtn     = document.getElementById('lb-skip-btn');
+  const initialsRow = document.getElementById('lb-initials-row');
+  const lbList      = document.getElementById('lb-list');
+
+  // Reset UI
+  nameInput.value       = '';
+  nameInput.disabled    = false;
+  submitBtn.disabled    = false;
+  submitBtn.textContent = 'Submit';
+  skipBtn.disabled      = false;
+  initialsRow.style.display = '';
+  lbList.innerHTML      = '';
+
+  // Auto-uppercase as user types
+  nameInput.oninput = () => {
+    nameInput.value = nameInput.value.toUpperCase();
+  };
+
+  // Auto-focus on desktop
+  const isMobile = navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches;
+  if (!isMobile) nameInput.focus();
+
+  // Pre-fetch today's scores in background
+  let cachedScores = null;
+  fetchScores().then(scores => { cachedScores = scores; });
+
+  submitBtn.onclick = async () => {
+    const name = nameInput.value.trim() || 'AAA';
+    nameInput.disabled    = true;
+    submitBtn.disabled    = true;
+    skipBtn.disabled      = true;
+    submitBtn.textContent = 'Submitting...';
+
+    const result = await submitScore(name, state.score, rounds, comboString, state.tone);
+    initialsRow.style.display = 'none';
+
+    if (result && Array.isArray(result.scores)) {
+      playerRank = result.rank;
+      const myTs = result.scores[result.rank - 1]?.ts;
+      renderLeaderboard(result.scores, myTs);
+    } else {
+      lbList.innerHTML = '<div class="lb-unavailable">Leaderboard unavailable</div>';
+    }
+  };
+
+  skipBtn.onclick = async () => {
+    initialsRow.style.display = 'none';
+    const scores = cachedScores ?? await fetchScores();
+    if (Array.isArray(scores) && scores.length > 0) {
+      renderLeaderboard(scores, null);
+    } else {
+      lbList.innerHTML = '<div class="lb-unavailable">Leaderboard unavailable</div>';
+    }
+  };
+}
+
+// =============================================
 // End game / Results
 // =============================================
 
@@ -786,6 +900,7 @@ function endGame() {
   clearInterval(state.timerInterval);
   state.active = false;
   gameScreen.style.cursor = '';
+  playerRank = null;
 
   const rounds     = state.round - 1;
   const elapsed    = Date.now() - state.startTime;
@@ -843,7 +958,14 @@ function endGame() {
   shareBtn.dataset.timerMode = state.timerMode;
   shareBtn.dataset.shapeMode = state.shapeMode;
 
+  const toneLabel2  = { pastel: 'Pastel', grey: 'Greyscale' }[state.tone] || state.tone;
+  const livesLabel2 = { classic: 'Classic', endless: 'Endless' }[state.livesMode] || state.livesMode;
+  const timerLabel2 = { '60': '60s', '30': '30s', none: 'No timer' }[state.timerMode] || state.timerMode;
+  const shapeLabel2 = { square: 'Square', circle: 'Circle', diamond: 'Diamond', random: 'Random' }[state.shapeMode] || state.shapeMode;
+  const comboString = `${toneLabel2} · ${livesLabel2} · ${timerLabel2} · ${shapeLabel2}`;
+
   showScreen('result');
+  initLeaderboard(rounds, comboString);
 }
 
 // =============================================
@@ -868,9 +990,10 @@ shareBtn.addEventListener('click', () => {
     ? `I scored ${score} on pixelpick`
     : `I survived ${rounds} rounds on pixelpick`;
 
-  const modeTag = `(${toneLabel} · ${livesLabel} · ${timerLabel} · ${shapeLabel})`;
+  const rankLine = playerRank ? `I'm #${playerRank} on today's leaderboard!` : '';
+  const modeTag  = `(${toneLabel} · ${livesLabel} · ${timerLabel} · ${shapeLabel})`;
 
-  const text = `${primaryLine} ${modeTag}\npixelpick.net`;
+  const text = [primaryLine, rankLine, modeTag, 'pixelpick.net'].filter(Boolean).join('\n');
 
   if (navigator.share) {
     navigator.share({ text }).catch(() => {});
