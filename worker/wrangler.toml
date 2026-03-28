@@ -1,5 +1,5 @@
 name = "pixelpick-leaderboard"
-main = "worker/index.js"
+main = "index.js"
 compatibility_date = "2026-01-01"
 
 [[kv_namespaces]]
