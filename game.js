@@ -72,7 +72,7 @@ const FILTER_DEFS = [
   {
     id: 'lives', label: 'Lives',
     options: [
-      { value: 'classic', icon: '♥♥♥', name: 'Classic', desc: '3 lives',  active: { bg: '#FFD6E0', color: '#C0405A' } },
+      { value: 'classic', icon: '♥\uFE0E♥\uFE0E♥\uFE0E', name: 'Classic', desc: '3 lives',  active: { bg: '#FFD6E0', color: '#C0405A' } },
       { value: 'endless', icon: '∞',   name: 'Endless', desc: 'no limit', active: { bg: '#FFE4C8', color: '#C06820' } },
     ],
   },
@@ -621,14 +621,14 @@ function updateHUD() {
   if (state.livesMode === 'endless') {
     const span = document.createElement('span');
     span.className   = 'heart heart-full';
-    span.textContent = '∞';
+    span.textContent = '∞\uFE0E';
     span.style.fontSize = '1.8rem';
     livesDisplay.appendChild(span);
   } else {
     for (let i = 0; i < 3; i++) {
       const span = document.createElement('span');
       span.className   = `heart ${i < state.lives ? 'heart-full' : 'heart-empty'}`;
-      span.textContent = '♥';
+      span.textContent = '♥\uFE0E';
       livesDisplay.appendChild(span);
     }
   }
@@ -827,6 +827,7 @@ function renderLeaderboard(container, scores, highlightTs) {
     row.innerHTML = `
       <span class="lb-rank">${i + 1}</span>
       <span class="lb-name">${entry.name}</span>
+      ${isMe ? '<span class="lb-you">you</span>' : ''}
       <span class="lb-combo">${entry.combo}</span>
       <span class="lb-score">${entry.score}</span>
     `;
@@ -849,6 +850,7 @@ function renderLeaderboard(container, scores, highlightTs) {
       row.innerHTML = `
         <span class="lb-rank">${playerIdx + 1}</span>
         <span class="lb-name">${entry.name}</span>
+        <span class="lb-you">you</span>
         <span class="lb-combo">${entry.combo}</span>
         <span class="lb-score">${entry.score}</span>
       `;
@@ -977,7 +979,7 @@ function endGame() {
   document.getElementById('result-elapsed').textContent    = `Time taken: ${formatElapsed(elapsed)}`;
 
   const wrongNote = state.livesMode === 'endless' ? " (didn't count)" : '';
-  document.getElementById('result-wrong-picks').textContent = `✗ Wrong picks: ${state.wrongClicks}${wrongNote}`;
+  document.getElementById('result-wrong-picks').textContent = `✗\uFE0E Wrong picks: ${state.wrongClicks}${wrongNote}`;
 
   const isMobile = navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches;
   document.getElementById('result-device').textContent = `Played on ${isMobile ? 'mobile' : 'desktop'}`;
