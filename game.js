@@ -239,6 +239,12 @@ function getComboText(tone, lives, timer, shape) {
 // Logo colour cycle
 // =============================================
 
+function setLiveColour(colour) {
+  playBtn.style.background = colour;
+  const qsClassic = document.querySelector('.btn-qs-classic');
+  if (qsClassic) qsClassic.style.background = colour;
+}
+
 function startLogoCycle() {
   stopLogoCycle();
   logoCycleIdx = 0;
@@ -246,12 +252,14 @@ function startLogoCycle() {
   const cycles = LOGO_CYCLES[filterTone] || LOGO_CYCLES.pastel;
   logoPixel.style.color = cycles[0].pixel;
   logoPick.style.color  = cycles[0].pick;
+  setLiveColour(cycles[0].pixel);
 
   logoCycleInterval = setInterval(() => {
     const c = LOGO_CYCLES[filterTone] || LOGO_CYCLES.pastel;
     logoCycleIdx = (logoCycleIdx + 1) % c.length;
     logoPixel.style.color = c[logoCycleIdx].pixel;
     logoPick.style.color  = c[logoCycleIdx].pick;
+    setLiveColour(c[logoCycleIdx].pixel);
   }, 2000);
 }
 

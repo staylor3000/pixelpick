@@ -135,12 +135,12 @@ button {
   padding: 16px 64px;
   min-height: 56px;
   margin-top: 8px;
-  transition: transform 0.15s ease, background 0.15s ease;
+  transition: transform 0.15s ease, filter 0.15s ease, background 0.6s ease;
   letter-spacing: 0.02em;
 }
 
-.btn-play:hover  { transform: scale(1.06); background: #3D3750; }
-.btn-play:active { transform: scale(0.97); }
+.btn-play:hover  { transform: scale(1.06); filter: brightness(1.25); }
+.btn-play:active { transform: scale(0.97); filter: none; }
 
 /* =============================================
    Game Screen
@@ -526,7 +526,7 @@ button {
   padding: 10px 20px;
   border: none;
   cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  transition: transform 0.1s ease, filter 0.1s ease, box-shadow 0.1s ease, background 0.6s ease;
   flex: 1;
 }
 
@@ -539,7 +539,7 @@ button {
   box-shadow: 0 3px 12px rgba(42,36,56,0.2);
 }
 
-.btn-qs-classic:hover { box-shadow: 0 6px 18px rgba(42,36,56,0.3); }
+.btn-qs-classic:hover { filter: brightness(1.25); box-shadow: 0 6px 18px rgba(42,36,56,0.3); }
 
 .btn-qs-random {
   background: white;
