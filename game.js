@@ -827,6 +827,7 @@ function renderLeaderboard(container, scores, highlightTs) {
     row.innerHTML = `
       <span class="lb-rank">${i + 1}</span>
       <span class="lb-name">${entry.name}</span>
+      ${isMe ? '<span class="lb-you">you</span>' : ''}
       <span class="lb-combo">${entry.combo}</span>
       <span class="lb-score">${entry.score}</span>
     `;
@@ -849,6 +850,7 @@ function renderLeaderboard(container, scores, highlightTs) {
       row.innerHTML = `
         <span class="lb-rank">${playerIdx + 1}</span>
         <span class="lb-name">${entry.name}</span>
+        <span class="lb-you">you</span>
         <span class="lb-combo">${entry.combo}</span>
         <span class="lb-score">${entry.score}</span>
       `;

@@ -67,6 +67,7 @@ button {
   flex-direction: column;
   overflow-y: auto;
   align-items: center;
+  justify-content: flex-start;
 }
 
 .floating-pixels {
@@ -752,6 +753,17 @@ button {
   color: var(--ink);
 }
 
+.lb-you {
+  font-size: 10px;
+  font-weight: 800;
+  color: #A070DD;
+  background: #EDE0FF;
+  border-radius: 6px;
+  padding: 2px 5px;
+  letter-spacing: .04em;
+  flex-shrink: 0;
+}
+
 .lb-unavailable {
   font-size: 12px;
   font-weight: 700;
@@ -784,10 +796,6 @@ button {
 
 .home-lb-section .lb-header {
   margin-bottom: 6px;
-}
-
-.home-lb-section .lb-combo {
-  display: none;
 }
 
 /* =============================================
