@@ -63,10 +63,10 @@ const FILTER_DEFS = [
   {
     id: 'tone', label: 'Tone',
     options: [
-      { value: 'pastel', icon: '🎨', name: 'Pastel',    desc: 'colour',    active: { bg: '#E8D8FF', color: '#7040BB' } },
-      { value: 'grey',   icon: '◑',  name: 'Greyscale', desc: 'no colour', active: { bg: '#E0E0E0', color: '#444444' } },
-      { value: 'dark',   icon: '🌑', name: 'Dark',      desc: null,        comingSoon: true },
-      { value: 'neon',   icon: '⚡', name: 'Neon',      desc: null,        comingSoon: true },
+      { value: 'pastel', icon: '',   name: 'Pastel',    desc: 'colour',    active: { bg: '#E8D8FF', color: '#7040BB' } },
+      { value: 'grey',   icon: '◑', name: 'Greyscale', desc: 'no colour', active: { bg: '#E0E0E0', color: '#444444' } },
+      { value: 'dark',   icon: '',   name: 'Dark',      desc: null,        comingSoon: true },
+      { value: 'neon',   icon: '',   name: 'Neon',      desc: null,        comingSoon: true },
     ],
   },
   {
@@ -79,8 +79,8 @@ const FILTER_DEFS = [
   {
     id: 'timer', label: 'Timer',
     options: [
-      { value: '60',  icon: '⏱', name: '60 sec',   desc: 'classic', active: { bg: '#C8F0E0', color: '#2A7A58' } },
-      { value: '30',  icon: '⚡', name: '30 sec',   desc: 'rush',    active: { bg: '#FFE4C8', color: '#C06820' } },
+      { value: '60',  icon: '',   name: '60 sec',   desc: 'classic', active: { bg: '#C8F0E0', color: '#2A7A58' } },
+      { value: '30',  icon: '',   name: '30 sec',   desc: 'rush',    active: { bg: '#FFE4C8', color: '#C06820' } },
       { value: 'none',icon: '∞', name: 'No timer', desc: 'chill',   active: { bg: '#FFD6E0', color: '#C0405A' } },
     ],
   },
@@ -304,12 +304,12 @@ function renderFilterRows() {
         btn.disabled = true;
         btn.classList.add('filter-coming-soon');
         btn.innerHTML = `
-          <span class="filter-icon">${opt.icon}</span>
+          ${opt.icon ? `<span class="filter-icon">${opt.icon}</span>` : ''}
           <span class="filter-name">${opt.name}</span>
           <span class="coming-soon-pill">soon</span>`;
       } else {
         btn.innerHTML = `
-          <span class="filter-icon">${opt.icon}</span>
+          ${opt.icon ? `<span class="filter-icon">${opt.icon}</span>` : ''}
           <span class="filter-name">${opt.name}</span>
           <span class="filter-desc">${opt.desc}</span>`;
         btn.addEventListener('click', () => onFilterClick(id, opt.value));
@@ -379,7 +379,7 @@ function renderQuickStartButtons() {
 
   const classicBtn = document.createElement('button');
   classicBtn.className = 'btn-qs btn-qs-classic';
-  classicBtn.textContent = '⚡ Quick Start: Classic';
+  classicBtn.textContent = 'Quick Start: Classic';
   classicBtn.addEventListener('click', () => {
     setFilter('tone',  'pastel');
     setFilter('lives', 'classic');
@@ -392,7 +392,7 @@ function renderQuickStartButtons() {
 
   const randomBtn = document.createElement('button');
   randomBtn.className = 'btn-qs btn-qs-random';
-  randomBtn.textContent = '🎲 Quick Start: Random';
+  randomBtn.textContent = 'Quick Start: Random';
   randomBtn.addEventListener('click', () => {
     if (randomBtn.disabled) return;
 
@@ -413,7 +413,7 @@ function renderQuickStartButtons() {
     startLogoCycle();
 
     const orig = randomBtn.textContent;
-    randomBtn.textContent = "🎲 Let's go!";
+    randomBtn.textContent = "Let's go!";
     randomBtn.disabled = true;
 
     setTimeout(() => {
@@ -489,6 +489,15 @@ function initGame() {
   gameScreen.style.cursor = GAME_CURSOR;
 
   timerPill.style.display = state.timerMode === 'none' ? 'none' : '';
+
+  const hudCombo = document.getElementById('hud-combo-text');
+  if (hudCombo) {
+    const toneLabel  = { pastel: 'Pastel', grey: 'Greyscale' }[state.tone];
+    const livesLabel = { classic: '3 lives', endless: 'Endless' }[state.livesMode];
+    const timerLabel = { '60': '60s', '30': '30s', none: 'No timer' }[state.timerMode];
+    const shapeLabel = { square: 'Square', circle: 'Circle', diamond: 'Diamond', random: 'Random' }[state.shapeMode];
+    hudCombo.textContent = `${toneLabel}  ·  ${livesLabel}  ·  ${timerLabel}  ·  ${shapeLabel}`;
+  }
 
   requestAnimationFrame(() => {
     state.startTime = Date.now();
@@ -798,23 +807,18 @@ function endGame() {
   }
 
   // Combo pill
-  const toneIcon  = state.tone === 'grey' ? '◑' : '🎨';
   const toneText  = state.tone === 'grey' ? 'Greyscale' : 'Pastel';
-  const livesIcon = state.livesMode === 'classic' ? '♥♥♥' : '∞';
   const livesText = state.livesMode === 'classic' ? 'Classic' : 'Endless';
-  const timerIcon = { '60': '⏱', '30': '⚡', none: '∞' }[state.timerMode];
   const timerText = { '60': '60s', '30': '30s', none: 'No timer' }[state.timerMode];
-  const shapeIcon = { square: '■', circle: '●', diamond: '◆', random: '✦' }[state.shapeMode];
   const shapeText = { square: 'Square', circle: 'Circle', diamond: 'Diamond', random: 'Random' }[state.shapeMode];
   document.getElementById('result-combo-pill').textContent =
-    `${toneIcon} ${toneText}  ·  ${livesIcon} ${livesText}  ·  ${timerIcon} ${timerText}  ·  ${shapeIcon} ${shapeText}`;
+    `${toneText}  ·  ${livesText}  ·  ${timerText}  ·  ${shapeText}`;
 
   const showScore = state.timerMode !== 'none';
   document.getElementById('result-score').textContent = showScore ? state.score : rounds;
   document.getElementById('result-label').textContent = showScore ? 'score' : 'rounds survived';
   document.getElementById('result-rounds').style.display = showScore ? '' : 'none';
 
-  document.getElementById('result-emoji').textContent      = displayRank.emoji;
   document.getElementById('result-title').textContent      = displayRank.title;
   document.getElementById('result-desc').textContent       = getRank(rounds).desc;
   document.getElementById('result-rounds').textContent     = `${rounds} round${rounds !== 1 ? 's' : ''} survived`;
@@ -858,9 +862,7 @@ shareBtn.addEventListener('click', () => {
     ? `I scored ${score} on pixelpick`
     : `I survived ${rounds} rounds on pixelpick`;
 
-  const modeTag = livesMode === 'endless' && timerMode === 'none'
-    ? '(Endless · No timer 🌀)'
-    : `(${toneLabel} · ${livesLabel} · ${timerLabel} · ${shapeLabel})`;
+  const modeTag = `(${toneLabel} · ${livesLabel} · ${timerLabel} · ${shapeLabel})`;
 
   const text = `${primaryLine} ${modeTag}\npixelpick.net`;
 
