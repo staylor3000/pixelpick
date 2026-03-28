@@ -66,6 +66,7 @@ const FILTER_DEFS = [
       { value: 'pastel', icon: '🎨', name: 'Pastel',    desc: 'colour',    active: { bg: '#E8D8FF', color: '#7040BB' } },
       { value: 'grey',   icon: '◑',  name: 'Greyscale', desc: 'no colour', active: { bg: '#E0E0E0', color: '#444444' } },
       { value: 'dark',   icon: '🌑', name: 'Dark',      desc: null,        comingSoon: true },
+      { value: 'neon',   icon: '⚡', name: 'Neon',      desc: null,        comingSoon: true },
     ],
   },
   {
@@ -83,7 +84,28 @@ const FILTER_DEFS = [
       { value: 'none',icon: '∞', name: 'No timer', desc: 'chill',   active: { bg: '#FFD6E0', color: '#C0405A' } },
     ],
   },
+  {
+    id: 'shape', label: 'Shape',
+    options: [
+      { value: 'square',  icon: '■', name: 'Square',  desc: 'classic', active: { bg: '#C8E8FF', color: '#2A6AAA' } },
+      { value: 'circle',  icon: '●', name: 'Circle',  desc: 'round',   active: { bg: '#FFD6E0', color: '#C0405A' } },
+      { value: 'diamond', icon: '◆', name: 'Diamond', desc: 'rotated', active: { bg: '#FFF3C0', color: '#B8880A' } },
+      { value: 'random',  icon: '✦', name: 'Random',  desc: 'surprise',active: { bg: '#E8D8FF', color: '#7040BB' } },
+    ],
+  },
 ];
+
+// Weighted pools for Quick Start: Random (excludes coming-soon options)
+const RANDOM_POOLS = {
+  tone:  ['pastel', 'pastel', 'pastel', 'grey'],
+  lives: ['classic', 'classic', 'endless'],
+  timer: ['60', '60', '30', 'none'],
+  shape: ['square', 'circle', 'diamond', 'random'],
+};
+
+// Custom SVG cursor for gameplay
+const CURSOR_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><circle cx='16' cy='16' r='6' fill='none' stroke='white' stroke-width='2' opacity='0.9'/><line x1='16' y1='4' x2='16' y2='11' stroke='white' stroke-width='2' stroke-linecap='round' opacity='0.9'/><line x1='16' y1='21' x2='16' y2='28' stroke='white' stroke-width='2' stroke-linecap='round' opacity='0.9'/><line x1='4' y1='16' x2='11' y2='16' stroke='white' stroke-width='2' stroke-linecap='round' opacity='0.9'/><line x1='21' y1='16' x2='28' y2='16' stroke='white' stroke-width='2' stroke-linecap='round' opacity='0.9'/></svg>`;
+const GAME_CURSOR = `url("data:image/svg+xml,${encodeURIComponent(CURSOR_SVG)}") 16 16, crosshair`;
 
 // =============================================
 // Filter state — persisted in sessionStorage
@@ -92,11 +114,13 @@ const FILTER_DEFS = [
 let filterTone  = sessionStorage.getItem('filterTone')  || 'pastel';
 let filterLives = sessionStorage.getItem('filterLives') || 'classic';
 let filterTimer = sessionStorage.getItem('filterTimer') || '60';
+let filterShape = sessionStorage.getItem('filterShape') || 'random';
 
 function setFilter(id, value) {
   if (id === 'tone')  { filterTone  = value; sessionStorage.setItem('filterTone',  value); }
   if (id === 'lives') { filterLives = value; sessionStorage.setItem('filterLives', value); }
   if (id === 'timer') { filterTimer = value; sessionStorage.setItem('filterTimer', value); }
+  if (id === 'shape') { filterShape = value; sessionStorage.setItem('filterShape', value); }
 }
 
 // =============================================
@@ -144,16 +168,17 @@ function resetState() {
     timeRemaining: timerStart,
     colourOrder:   shuffle(getColourPalette(filterTone)),
     currentColour: null,
-    targetRect:    null,
+    currentShape:  null,
     timerInterval: null,
     missedColours: {},
     wrongClicks:   0,
     active:        false,
     startTime:     null,
-    // Snapshot of filters for result screen / share (can't change mid-game)
+    // Snapshot of filters at game start
     tone:          filterTone,
     livesMode:     filterLives,
     timerMode:     filterTimer,
+    shapeMode:     filterShape,
   };
 }
 
@@ -202,16 +227,23 @@ function formatElapsed(ms) {
   return `${s}s`;
 }
 
-function getComboText(tone, lives, timer) {
+function getComboText(tone, lives, timer, shape) {
   const toneLabel  = { pastel: 'Pastel', grey: 'Greyscale' }[tone]  || tone;
   const livesLabel = { classic: '3 lives', endless: 'Endless lives' }[lives] || lives;
   const timerLabel = { '60': '60 seconds', '30': '30 seconds', none: 'No timer' }[timer] || timer;
-  return `${toneLabel} · ${livesLabel} · ${timerLabel}`;
+  const shapeLabel = { square: 'Square', circle: 'Circle', diamond: 'Diamond', random: 'Random shape' }[shape] || shape;
+  return `${toneLabel} · ${livesLabel} · ${timerLabel} · ${shapeLabel}`;
 }
 
 // =============================================
 // Logo colour cycle
 // =============================================
+
+function setLiveColour(colour) {
+  playBtn.style.background = colour;
+  const qsClassic = document.querySelector('.btn-qs-classic');
+  if (qsClassic) qsClassic.style.background = colour;
+}
 
 function startLogoCycle() {
   stopLogoCycle();
@@ -220,12 +252,14 @@ function startLogoCycle() {
   const cycles = LOGO_CYCLES[filterTone] || LOGO_CYCLES.pastel;
   logoPixel.style.color = cycles[0].pixel;
   logoPick.style.color  = cycles[0].pick;
+  setLiveColour(cycles[0].pixel);
 
   logoCycleInterval = setInterval(() => {
     const c = LOGO_CYCLES[filterTone] || LOGO_CYCLES.pastel;
     logoCycleIdx = (logoCycleIdx + 1) % c.length;
     logoPixel.style.color = c[logoCycleIdx].pixel;
     logoPick.style.color  = c[logoCycleIdx].pick;
+    setLiveColour(c[logoCycleIdx].pixel);
   }, 2000);
 }
 
@@ -278,7 +312,7 @@ function renderFilterRows() {
           <span class="filter-icon">${opt.icon}</span>
           <span class="filter-name">${opt.name}</span>
           <span class="filter-desc">${opt.desc}</span>`;
-        btn.addEventListener('click', () => onFilterClick(id, opt.value, opt.active));
+        btn.addEventListener('click', () => onFilterClick(id, opt.value));
       }
 
       opts.appendChild(btn);
@@ -296,6 +330,7 @@ function applyAllFilterActiveStates() {
   applyFilterActiveState('tone',  filterTone);
   applyFilterActiveState('lives', filterLives);
   applyFilterActiveState('timer', filterTimer);
+  applyFilterActiveState('shape', filterShape);
 }
 
 function applyFilterActiveState(filterId, activeValue) {
@@ -331,7 +366,65 @@ function onFilterClick(filterId, value) {
 
 function updateComboPreview() {
   const el = document.getElementById('combo-preview');
-  if (el) el.textContent = getComboText(filterTone, filterLives, filterTimer);
+  if (el) el.textContent = getComboText(filterTone, filterLives, filterTimer, filterShape);
+}
+
+// =============================================
+// Quick Start buttons
+// =============================================
+
+function renderQuickStartButtons() {
+  const container = document.getElementById('quick-start-row');
+  if (!container) return;
+
+  const classicBtn = document.createElement('button');
+  classicBtn.className = 'btn-qs btn-qs-classic';
+  classicBtn.textContent = '⚡ Quick Start: Classic';
+  classicBtn.addEventListener('click', () => {
+    setFilter('tone',  'pastel');
+    setFilter('lives', 'classic');
+    setFilter('timer', '60');
+    setFilter('shape', 'square');
+    applyAllFilterActiveStates();
+    updateComboPreview();
+    initGame();
+  });
+
+  const randomBtn = document.createElement('button');
+  randomBtn.className = 'btn-qs btn-qs-random';
+  randomBtn.textContent = '🎲 Quick Start: Random';
+  randomBtn.addEventListener('click', () => {
+    if (randomBtn.disabled) return;
+
+    for (const [key, pool] of Object.entries(RANDOM_POOLS)) {
+      setFilter(key, pool[Math.floor(Math.random() * pool.length)]);
+    }
+
+    applyAllFilterActiveStates();
+
+    const preview = document.getElementById('combo-preview');
+    if (preview) {
+      preview.classList.remove('combo-animate');
+      void preview.offsetWidth;
+      preview.classList.add('combo-animate');
+    }
+    updateComboPreview();
+    floatingPixels.classList.toggle('greyscale', filterTone === 'grey');
+    startLogoCycle();
+
+    const orig = randomBtn.textContent;
+    randomBtn.textContent = "🎲 Let's go!";
+    randomBtn.disabled = true;
+
+    setTimeout(() => {
+      randomBtn.textContent = orig;
+      randomBtn.disabled = false;
+      initGame();
+    }, 600);
+  });
+
+  container.appendChild(classicBtn);
+  container.appendChild(randomBtn);
 }
 
 // =============================================
@@ -345,6 +438,47 @@ function showScreen(name) {
 }
 
 // =============================================
+// Shape
+// =============================================
+
+function applyShape(el, shape, size) {
+  el.style.width  = size + 'px';
+  el.style.height = size + 'px';
+
+  if (shape === 'square') {
+    el.style.borderRadius = '6px';
+    el.style.transform    = 'rotate(0deg)';
+  } else if (shape === 'circle') {
+    el.style.borderRadius = '50%';
+    el.style.transform    = 'rotate(0deg)';
+  } else if (shape === 'diamond') {
+    el.style.borderRadius = '6px';
+    el.style.transform    = 'rotate(45deg)';
+    el.style.width  = (size * 0.85) + 'px';
+    el.style.height = (size * 0.85) + 'px';
+  }
+}
+
+function isClickOnTarget(clientX, clientY) {
+  const rect = targetPatch.getBoundingClientRect();
+  const cx = rect.left + rect.width  / 2;
+  const cy = rect.top  + rect.height / 2;
+  const dx = clientX - cx;
+  const dy = clientY - cy;
+
+  if (state.currentShape === 'circle') {
+    const r = rect.width / 2;
+    return (dx * dx + dy * dy) <= (r * r);
+  }
+  if (state.currentShape === 'diamond') {
+    const half = rect.width / 2;
+    return (Math.abs(dx) + Math.abs(dy)) <= half;
+  }
+  return clientX >= rect.left && clientX <= rect.right &&
+         clientY >= rect.top  && clientY <= rect.bottom;
+}
+
+// =============================================
 // Game flow
 // =============================================
 
@@ -352,15 +486,15 @@ function initGame() {
   stopLogoCycle();
   resetState();
   showScreen('game');
+  gameScreen.style.cursor = GAME_CURSOR;
 
-  // Hide timer pill in no-timer mode
   timerPill.style.display = state.timerMode === 'none' ? 'none' : '';
 
   requestAnimationFrame(() => {
     state.startTime = Date.now();
     startRound();
     if (state.timerMode !== 'none') startTimer();
-    state.active = true;
+    // state.active is enabled by startRound after round label
   });
 }
 
@@ -380,33 +514,61 @@ function startRound() {
   const size      = getSize(round);
   const targetL   = (l + delta <= 94) ? l + delta : l - delta;
 
-  gameCanvas.style.backgroundColor = hsl(h, s, l);
-  targetPatch.style.width           = `${size}px`;
-  targetPatch.style.height          = `${size}px`;
-  targetPatch.style.backgroundColor = hsl(h, s, targetL);
+  // Determine shape for this round
+  const shapes = ['square', 'circle', 'diamond'];
+  state.currentShape = state.shapeMode === 'random'
+    ? shapes[Math.floor(Math.random() * shapes.length)]
+    : state.shapeMode;
 
-  placeTarget(size);
-  updateHUD();
+  // Background crossfade (skip transition on round 1)
+  if (round > 1) {
+    gameCanvas.style.transition = 'background-color 0.35s ease';
+  }
+  gameCanvas.style.backgroundColor = hsl(h, s, l);
+
+  // Apply shape / colour to target; hide during transition
+  applyShape(targetPatch, state.currentShape, size);
+  targetPatch.style.backgroundColor = hsl(h, s, targetL);
+  targetPatch.style.opacity    = '0';
+  targetPatch.style.transition = 'none';
+
+  setTimeout(() => {
+    placeTarget();
+    gameCanvas.style.transition = '';
+    requestAnimationFrame(() => {
+      targetPatch.style.transition = 'opacity 0.2s ease';
+      targetPatch.style.opacity    = '1';
+    });
+    showRoundLabel(round);
+    updateHUD();
+
+    setTimeout(() => {
+      targetPatch.style.transition = '';
+      state.active = true;
+    }, 1000);
+  }, 200);
 }
 
-function placeTarget(size) {
+function placeTarget() {
   const margin    = 80;
   const hudHeight = 80;
   const w         = window.innerWidth;
   const h         = window.innerHeight;
 
+  // Use CSS size for bounds (applyShape already set width/height on the element)
+  const elW = parseFloat(targetPatch.style.width)  || 60;
+  const elH = parseFloat(targetPatch.style.height) || 60;
+
   const minX = margin;
-  const maxX = w - margin - size;
+  const maxX = w - margin - elW;
   const minY = margin + hudHeight;
-  const maxY = h - margin - size;
+  const maxY = h - margin - elH;
 
   const x = Math.floor(Math.random() * Math.max(1, maxX - minX)) + minX;
   const y = Math.floor(Math.random() * Math.max(1, maxY - minY)) + minY;
 
   targetPatch.style.left = `${x}px`;
   targetPatch.style.top  = `${y}px`;
-
-  state.targetRect = { x, y, width: size, height: size };
 }
 
 // =============================================
@@ -456,17 +618,13 @@ function updateHUD() {
 }
 
 // =============================================
-// Click / Touch handling
+// Click / touch handling
 // =============================================
 
 function handleInput(clientX, clientY) {
   if (!state.active) return;
 
-  const t   = state.targetRect;
-  const hit = clientX >= t.x && clientX <= t.x + t.width
-           && clientY >= t.y && clientY <= t.y + t.height;
-
-  if (hit) {
+  if (isClickOnTarget(clientX, clientY)) {
     correctClick(clientX, clientY);
   } else {
     wrongClick();
@@ -481,17 +639,13 @@ function correctClick(clientX, clientY) {
   const points   = Math.round(100 * (delta / 18) * timeMult);
   state.score   += points;
 
-  showRipple(clientX, clientY);
+  spawnRipple(clientX, clientY);
+  spawnScorePopup(clientX, clientY, points);
+  navigator.vibrate && navigator.vibrate(25);
   updateHUD();
 
-  gameCanvas.style.transition = 'background-color 0.3s ease';
   state.round++;
-
-  setTimeout(() => {
-    startRound();
-    gameCanvas.style.transition = '';
-    state.active = true;
-  }, 300);
+  setTimeout(() => startRound(), 300);
 }
 
 function wrongClick() {
@@ -500,7 +654,8 @@ function wrongClick() {
   const name = state.currentColour.name;
   state.missedColours[name] = (state.missedColours[name] || 0) + 1;
 
-  flashWrong();
+  flashWrongClick();
+  navigator.vibrate && navigator.vibrate([40, 20, 40]);
 
   if (state.livesMode === 'classic') {
     state.lives = Math.max(0, state.lives - 1);
@@ -516,24 +671,92 @@ function wrongClick() {
       }, 500);
     }
   } else {
-    updateHUD(); // endless — just flash, no life lost
+    updateHUD();
   }
 }
 
-function flashWrong() {
-  gameCanvas.classList.remove('wrong-flash');
-  void gameCanvas.offsetWidth;
-  gameCanvas.classList.add('wrong-flash');
-  setTimeout(() => gameCanvas.classList.remove('wrong-flash'), 400);
+function flashWrongClick() {
+  const flash = document.createElement('div');
+  flash.style.cssText = [
+    'position:fixed',
+    'inset:0',
+    'background:radial-gradient(ellipse at center, transparent 40%, rgba(220,50,50,0.45) 100%)',
+    'pointer-events:none',
+    'animation:flashFade 0.4s ease-out forwards',
+    'z-index:99',
+  ].join(';');
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 400);
 }
 
-function showRipple(x, y) {
+function spawnRipple(x, y) {
+  [
+    { maxSize: 120, duration: 500 },
+    { maxSize: 150, duration: 700 },
+  ].forEach(({ maxSize, duration }) => {
+    const el = document.createElement('div');
+    el.style.cssText = [
+      `position:fixed`,
+      `left:${x}px`,
+      `top:${y}px`,
+      `width:0`,
+      `height:0`,
+      `border-radius:50%`,
+      `border:3px solid rgba(255,255,255,0.8)`,
+      `transform:translate(-50%,-50%)`,
+      `pointer-events:none`,
+      `z-index:100`,
+    ].join(';');
+    document.body.appendChild(el);
+    el.animate(
+      [
+        { width: '0px',          height: '0px',          opacity: 1 },
+        { width: `${maxSize}px`, height: `${maxSize}px`, opacity: 0 },
+      ],
+      { duration, easing: 'ease-out', fill: 'forwards' }
+    );
+    setTimeout(() => el.remove(), duration + 50);
+  });
+}
+
+function spawnScorePopup(x, y, points) {
   const el = document.createElement('div');
-  el.className = 'ripple';
-  el.style.left = `${x}px`;
-  el.style.top  = `${y}px`;
+  el.textContent = `+${points}`;
+  el.style.cssText = [
+    `position:fixed`,
+    `left:${x}px`,
+    `top:${y}px`,
+    `font-family:'Fredoka One',sans-serif`,
+    `font-size:28px`,
+    `color:white`,
+    `text-shadow:0 2px 8px rgba(0,0,0,0.2)`,
+    `pointer-events:none`,
+    `transform:translate(-50%,-50%)`,
+    `animation:scoreFloat 0.8s ease-out forwards`,
+    `z-index:101`,
+  ].join(';');
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 650);
+  setTimeout(() => el.remove(), 800);
+}
+
+function showRoundLabel(round) {
+  const el = document.createElement('div');
+  el.textContent = `Round ${round}`;
+  el.style.cssText = [
+    `position:fixed`,
+    `top:50%`,
+    `left:50%`,
+    `transform:translate(-50%,-50%)`,
+    `font-family:'Fredoka One',sans-serif`,
+    `font-size:36px`,
+    `color:white`,
+    `text-shadow:0 2px 12px rgba(0,0,0,0.15)`,
+    `pointer-events:none`,
+    `animation:roundLabelFade 1s ease-in-out forwards`,
+    `z-index:102`,
+  ].join(';');
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
 }
 
 // =============================================
@@ -550,13 +773,13 @@ function getHardestColour() {
 function endGame() {
   clearInterval(state.timerInterval);
   state.active = false;
+  gameScreen.style.cursor = '';
 
   const rounds     = state.round - 1;
   const elapsed    = Date.now() - state.startTime;
   const hardest    = getHardestColour();
   const percentile = Math.min(99, Math.round((rounds / 12) * 95) + 3);
 
-  // Base rank
   let displayRank = { ...getRank(rounds) };
 
   // Marathon override for endless + no-timer
@@ -569,7 +792,6 @@ function endGame() {
     }
   }
 
-  // Background tint from last round
   if (state.currentColour) {
     const [h, s, l] = state.currentColour.hsl;
     resultScreen.style.backgroundColor = hsl(h, s, l);
@@ -582,14 +804,14 @@ function endGame() {
   const livesText = state.livesMode === 'classic' ? 'Classic' : 'Endless';
   const timerIcon = { '60': '⏱', '30': '⚡', none: '∞' }[state.timerMode];
   const timerText = { '60': '60s', '30': '30s', none: 'No timer' }[state.timerMode];
+  const shapeIcon = { square: '■', circle: '●', diamond: '◆', random: '✦' }[state.shapeMode];
+  const shapeText = { square: 'Square', circle: 'Circle', diamond: 'Diamond', random: 'Random' }[state.shapeMode];
   document.getElementById('result-combo-pill').textContent =
-    `${toneIcon} ${toneText}  ·  ${livesIcon} ${livesText}  ·  ${timerIcon} ${timerText}`;
+    `${toneIcon} ${toneText}  ·  ${livesIcon} ${livesText}  ·  ${timerIcon} ${timerText}  ·  ${shapeIcon} ${shapeText}`;
 
-  // Primary stat: score for timed modes, rounds for no-timer
   const showScore = state.timerMode !== 'none';
   document.getElementById('result-score').textContent = showScore ? state.score : rounds;
   document.getElementById('result-label').textContent = showScore ? 'score' : 'rounds survived';
-  // Hide rounds if already primary stat
   document.getElementById('result-rounds').style.display = showScore ? '' : 'none';
 
   document.getElementById('result-emoji').textContent      = displayRank.emoji;
@@ -603,13 +825,13 @@ function endGame() {
   const wrongNote = state.livesMode === 'endless' ? " (didn't count)" : '';
   document.getElementById('result-wrong-picks').textContent = `✗ Wrong picks: ${state.wrongClicks}${wrongNote}`;
 
-  // Store for share button
   shareBtn.dataset.score     = state.score;
   shareBtn.dataset.rounds    = rounds;
   shareBtn.dataset.rank      = displayRank.title;
   shareBtn.dataset.tone      = state.tone;
   shareBtn.dataset.livesMode = state.livesMode;
   shareBtn.dataset.timerMode = state.timerMode;
+  shareBtn.dataset.shapeMode = state.shapeMode;
 
   showScreen('result');
 }
@@ -625,10 +847,12 @@ shareBtn.addEventListener('click', () => {
   const tone      = shareBtn.dataset.tone;
   const livesMode = shareBtn.dataset.livesMode;
   const timerMode = shareBtn.dataset.timerMode;
+  const shapeMode = shareBtn.dataset.shapeMode;
 
   const toneLabel  = { pastel: 'Pastel', grey: 'Greyscale' }[tone];
   const livesLabel = { classic: '3 lives', endless: 'Endless lives' }[livesMode];
   const timerLabel = { '60': '60s', '30': '30s', none: 'No timer' }[timerMode];
+  const shapeLabel = { square: 'Square', circle: 'Circle', diamond: 'Diamond', random: 'Random shape' }[shapeMode];
 
   const primaryLine = timerMode !== 'none'
     ? `I scored ${score} on pixelpick`
@@ -636,7 +860,7 @@ shareBtn.addEventListener('click', () => {
 
   const modeTag = livesMode === 'endless' && timerMode === 'none'
     ? '(Endless · No timer 🌀)'
-    : `(${toneLabel} · ${livesLabel} · ${timerLabel})`;
+    : `(${toneLabel} · ${livesLabel} · ${timerLabel} · ${shapeLabel})`;
 
   const text = `${primaryLine} ${modeTag}\npixelpick.net`;
 
@@ -664,7 +888,8 @@ playBtn.addEventListener('click', initGame);
 document.getElementById('home-btn').addEventListener('click', () => {
   clearInterval(state.timerInterval);
   state.active = false;
-  timerPill.style.display = ''; // reset for next game
+  gameScreen.style.cursor = '';
+  timerPill.style.display = '';
   showScreen('start');
   startLogoCycle();
 });
@@ -688,6 +913,7 @@ gameCanvas.addEventListener('touchstart', (e) => {
 // Initialise start screen
 // =============================================
 
+renderQuickStartButtons();
 renderFilterRows();
 floatingPixels.classList.toggle('greyscale', filterTone === 'grey');
 startLogoCycle();
