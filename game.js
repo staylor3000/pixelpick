@@ -832,6 +832,9 @@ function endGame() {
   const wrongNote = state.livesMode === 'endless' ? " (didn't count)" : '';
   document.getElementById('result-wrong-picks').textContent = `✗ Wrong picks: ${state.wrongClicks}${wrongNote}`;
 
+  const isMobile = navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches;
+  document.getElementById('result-device').textContent = `Played on ${isMobile ? 'mobile' : 'desktop'}`;
+
   shareBtn.dataset.score     = state.score;
   shareBtn.dataset.rounds    = rounds;
   shareBtn.dataset.rank      = displayRank.title;
