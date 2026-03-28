@@ -651,9 +651,8 @@ function handleInput(clientX, clientY) {
 function correctClick(clientX, clientY) {
   state.active = false;
 
-  const delta    = getDelta(state.round);
   const timeMult = state.timeRemaining !== null ? state.timeRemaining / 60 : 1;
-  const points   = Math.round(100 * (delta / 18) * timeMult);
+  const points   = Math.round(100 * timeMult);
   state.score   += points;
 
   spawnRipple(clientX, clientY);
