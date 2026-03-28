@@ -157,16 +157,9 @@ button {
   cursor: crosshair;
 }
 
-/* HUD dark gradient at top for readability */
+/* HUD gradient removed — was causing visible top-edge darkening on pastel backgrounds */
 .hud-gradient {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 110px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.18), transparent);
-  pointer-events: none;
-  z-index: 5;
+  display: none;
 }
 
 /* HUD row */
