@@ -153,6 +153,7 @@ const livesDisplay = document.getElementById('lives-display');
 let state = {};
 let logoCycleInterval = null;
 let logoCycleIdx = 0;
+let currentLiveColour = '#2A2438';
 
 function getColourPalette(tone) {
   return tone === 'grey' ? GREYSCALE_COLOURS : ROUND_COLOURS;
@@ -240,9 +241,11 @@ function getComboText(tone, lives, timer, shape) {
 // =============================================
 
 function setLiveColour(colour) {
+  currentLiveColour = colour;
   playBtn.style.background = colour;
   const qsClassic = document.querySelector('.btn-qs-classic');
   if (qsClassic) qsClassic.style.background = colour;
+  applyAllFilterActiveStates();
 }
 
 function startLogoCycle() {
@@ -343,8 +346,8 @@ function applyFilterActiveState(filterId, activeValue) {
 
     if (btn.dataset.value === activeValue) {
       btn.classList.add('active');
-      btn.style.background = opt.active.bg;
-      btn.style.color      = opt.active.color;
+      btn.style.background = currentLiveColour;
+      btn.style.color      = 'white';
     } else {
       btn.classList.remove('active');
       btn.style.background = '';
