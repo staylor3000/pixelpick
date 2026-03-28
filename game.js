@@ -158,6 +158,7 @@ let logoCycleInterval = null;
 let logoCycleIdx = 0;
 let currentLiveColour = '#2A2438';
 let playerRank = null;
+let playerTs   = null;
 
 function getColourPalette(tone) {
   return tone === 'grey' ? GREYSCALE_COLOURS : ROUND_COLOURS;
@@ -561,7 +562,7 @@ function startRound() {
     setTimeout(() => {
       targetPatch.style.transition = '';
       state.active = true;
-    }, 1000);
+    }, 300);
   }, 200);
 }
 
@@ -803,13 +804,24 @@ async function fetchScores() {
   }
 }
 
-function renderLeaderboard(scores, highlightTs) {
-  const list = document.getElementById('lb-list');
-  list.innerHTML = '';
+async function refreshHomeLb() {
+  const list = document.getElementById('home-lb-list');
+  if (!list) return;
+  const scores = await fetchScores();
+  if (Array.isArray(scores) && scores.length > 0) {
+    renderLeaderboard(list, scores, playerTs);
+  } else {
+    list.innerHTML = '';
+  }
+}
+
+function renderLeaderboard(container, scores, highlightTs) {
+  container.innerHTML = '';
 
   const medals = ['', '#C9A227', '#9A9A9A', '#CD7F32'];
+  const top5   = scores.slice(0, 5);
 
-  scores.slice(0, 10).forEach((entry, i) => {
+  top5.forEach((entry, i) => {
     const isMe = highlightTs != null && entry.ts === highlightTs;
     const row = document.createElement('div');
     row.className = 'lb-row' + (isMe ? ' lb-row-me' : '');
@@ -819,11 +831,31 @@ function renderLeaderboard(scores, highlightTs) {
       <span class="lb-combo">${entry.combo}</span>
       <span class="lb-score">${entry.score}</span>
     `;
-    if (i < 3) {
-      row.querySelector('.lb-rank').style.color = medals[i + 1];
-    }
-    list.appendChild(row);
+    if (i < 3) row.querySelector('.lb-rank').style.color = medals[i + 1];
+    container.appendChild(row);
   });
+
+  // 6th slot: show player's entry if they're outside the top 5
+  if (highlightTs != null && !top5.some(e => e.ts === highlightTs)) {
+    const playerIdx = scores.findIndex(e => e.ts === highlightTs);
+    if (playerIdx >= 0) {
+      const sep = document.createElement('div');
+      sep.className   = 'lb-separator';
+      sep.textContent = '···';
+      container.appendChild(sep);
+
+      const entry = scores[playerIdx];
+      const row = document.createElement('div');
+      row.className = 'lb-row lb-row-me';
+      row.innerHTML = `
+        <span class="lb-rank">${playerIdx + 1}</span>
+        <span class="lb-name">${entry.name}</span>
+        <span class="lb-combo">${entry.combo}</span>
+        <span class="lb-score">${entry.score}</span>
+      `;
+      container.appendChild(row);
+    }
+  }
 }
 
 function initLeaderboard(rounds, comboString) {
@@ -867,8 +899,8 @@ function initLeaderboard(rounds, comboString) {
 
     if (result && Array.isArray(result.scores)) {
       playerRank = result.rank;
-      const myTs = result.scores[result.rank - 1]?.ts;
-      renderLeaderboard(result.scores, myTs);
+      playerTs   = result.scores[result.rank - 1]?.ts ?? null;
+      renderLeaderboard(lbList, result.scores, playerTs);
     } else {
       lbList.innerHTML = '<div class="lb-unavailable">Leaderboard unavailable</div>';
     }
@@ -878,7 +910,7 @@ function initLeaderboard(rounds, comboString) {
     initialsRow.style.display = 'none';
     const scores = cachedScores ?? await fetchScores();
     if (Array.isArray(scores) && scores.length > 0) {
-      renderLeaderboard(scores, null);
+      renderLeaderboard(lbList, scores, playerTs);
     } else {
       lbList.innerHTML = '<div class="lb-unavailable">Leaderboard unavailable</div>';
     }
@@ -901,6 +933,7 @@ function endGame() {
   state.active = false;
   gameScreen.style.cursor = '';
   playerRank = null;
+  playerTs   = null;
 
   const rounds     = state.round - 1;
   const elapsed    = Date.now() - state.startTime;
@@ -1023,11 +1056,13 @@ document.getElementById('home-btn').addEventListener('click', () => {
   timerPill.style.display = '';
   showScreen('start');
   startLogoCycle();
+  refreshHomeLb();
 });
 
 playAgainBtn.addEventListener('click', () => {
   showScreen('start');
   startLogoCycle();
+  refreshHomeLb();
 });
 
 gameCanvas.addEventListener('click', (e) => {
@@ -1048,6 +1083,7 @@ renderQuickStartButtons();
 renderFilterRows();
 floatingPixels.classList.toggle('greyscale', filterTone === 'grey');
 startLogoCycle();
+refreshHomeLb();
 
 // =============================================
 // Floating pixels on start screen
